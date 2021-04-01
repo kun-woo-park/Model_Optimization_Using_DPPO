@@ -1,25 +1,12 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
-from mpl_toolkits.mplot3d import Axes3D
-from ppo_lr_schedule import PPO, Memory, FClayer, WaveNET, plot, ActorCritic
+from ppo_lr_schedule import PPO, Memory, plot
 import numpy as np
 import itertools
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import gym
-import gym_Aircraft
-import math
 import copy
 
-device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
-
-
-# In[2]:
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def init_weights(m):
@@ -28,43 +15,21 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
-# In[3]:
-
-
 actor_model = torch.load("./Custom_model_fin")
 critic_model = torch.load("./Custom_model_fin")
 test_model = torch.load("./Custom_model_fin")
 mean = np.load('mean_test.npy')
 std = np.load('std_test.npy')
-
-
-# In[4]:
-
-
 num_final_nodes = critic_model.fin_fc.in_features
 critic_model.fin_fc = nn.Linear(num_final_nodes, 1)
-
-
-# In[5]:
-
-
 actor_model.fin_fc = nn.Sequential(actor_model.fin_fc, nn.Softmax(dim=-1))
 test_model.fin_fc = nn.Sequential(test_model.fin_fc, nn.Softmax(dim=-1))
 test_model = test_model.to(device)
-
-
-# In[6]:
-
-
 for param in actor_model.parameters():
     param.requires_grad = False
 
 for param in test_model.parameters():
     param.requires_grad = False
-
-
-# In[7]:
-
 
 # set angular constants
 Deg2Rad = np.pi/180
@@ -92,12 +57,6 @@ gamma = 0.999                # discount factor
 K_epochs = 4                # update policy for K epochs
 eps_clip = 0.2              # clip parameter for PPO
 step_size = 10000          # lr scheduling step size
-
-# initialize epsilon for greedy algorithm at start
-# e_start = 1.0
-# e_final = 0.001
-# e_decay = 500
-# epsilon_by_frame = lambda frame_idx: e_final + (e_start - e_final) * math.exp(-1. * frame_idx / e_decay)
 random_seed = 0
 
 # creating environment
@@ -117,18 +76,12 @@ env.seed(random_seed)
 memory = Memory()
 ppo = PPO(actor_model, critic_model, lr, betas,
           gamma, K_epochs, eps_clip, step_size)
-# load weight to transfer knowledges
-# ppo.policy_old.load_state_dict(torch.load("PPO_1.29.pth"))
 
 # logging variables
 running_reward = 0
 test_running_reward = 0
 avg_length = 0
-timestep = 0
-
-
-# In[8]:
-
+time_step = 0
 
 # initialize lists for print
 rewards = []
@@ -149,7 +102,7 @@ for i_episode in range(1, max_episodes+1):
     test_done = False
 
     for t in range(max_timesteps):
-        timestep += 1
+        time_step += 1
         state = (state-mean)/std
 
         # Test with the initial model
@@ -205,10 +158,10 @@ for i_episode in range(1, max_episodes+1):
         memory.is_terminals.append(done)
 
         # update if its time
-        if timestep % update_timestep == 0:
+        if time_step % update_timestep == 0:
             ppo.update(memory)
             memory.clear_memory()
-            timestep = 0
+            time_step = 0
 
         running_reward += reward
         epi_reward += reward
@@ -246,86 +199,7 @@ for i_episode in range(1, max_episodes+1):
         test_running_reward = 0
         avg_length = 0
 
-
-# In[9]:
-
-
 torch.save(ppo.policy.state_dict(), './PPO_{}.pth'.format(experiment_version))
-
-
-# In[10]:
-
 
 np.savetxt("{}.csv".format(experiment_version),
            np.array(rewards), delimiter=",")
-
-
-# In[11]:
-
-
-Deg2Rad = np.pi/180
-Rad2Deg = 1/Deg2Rad
-
-plt_res = total_res[-1]
-
-
-plt.figure(figsize=(15, 9), dpi=100)
-
-plt.subplot(511)
-plt.plot(plt_res[:, 0], label=r'$\dot{h}_{cmd}$')
-plt.ylabel(r'$\dot{h}_{cmd}$ ($m/s$)'), plt.grid()
-
-plt.subplot(512)
-plt.plot(plt_res[:, 10], label=r'$\{h}$')
-plt.ylabel(r'$h$ (m)'), plt.grid()
-
-plt.subplot(513)
-plt.plot(plt_res[:, 1], label=r'$\{r}$')
-plt.ylabel(r'$r$ (m)'), plt.grid()
-
-plt.subplot(514)
-plt.plot(plt_res[:, 2]*Rad2Deg, label='elevation')
-plt.ylabel('elevation (deg)'), plt.grid()
-
-plt.subplot(515)
-plt.plot(plt_res[:, 3]*Rad2Deg, label='azimuth')
-plt.ylabel('azimuth (deg)'), plt.grid()
-
-plt.legend()
-plt.show()
-
-
-# In[12]:
-
-
-# trajectory plots
-
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.gca(projection='3d')
-plt.plot(plt_res[:, 5], plt_res[:, 4], -
-         plt_res[:, 6], label='player', linewidth=3)
-plt.plot(plt_res[:, 8], plt_res[:, 7], -
-         plt_res[:, 9], label='target', linewidth=3)
-plt.xlabel('East')
-plt.ylabel('North')
-plt.xlim(-2000, 2000)
-plt.ylim(0, 4000)
-plt.legend()
-plt.show()
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.plot(plt_res[:, 5], plt_res[:, 4], label='player', linewidth=3)
-plt.plot(plt_res[:, 8], plt_res[:, 7], label='target', linewidth=3)
-plt.xlabel('East')
-plt.ylabel('North')
-plt.grid(), plt.legend(), plt.axis('equal')
-plt.show()
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.plot(plt_res[:, 4], -plt_res[:, 6], label='player', linewidth=3)
-plt.plot(plt_res[:, 7], -plt_res[:, 9], label='target', linewidth=3)
-plt.xlabel('North')
-plt.ylabel('Up')
-plt.grid(), plt.legend(), plt.axis('equal')
-plt.show()

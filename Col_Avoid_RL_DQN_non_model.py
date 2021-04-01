@@ -1,15 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
-from mpl_toolkits.mplot3d import Axes3D
 import gym
 import math
 import random
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple
 from itertools import count
@@ -19,17 +11,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import torchvision.transforms as T
-import os
-import gym_Aircraft
 from torch import Tensor
-from typing import Type, Any, Callable, Union, List, Optional
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
-
-# In[2]:
-
 
 # creating environment
 succeed_coef = 8000         # maximum reward when agent avoids collision
@@ -47,12 +29,8 @@ env_name = "acav-v0"
 env = gym.make(env_name)
 env.env.__init__(succeed_coef, collide_coef, change_cmd_penalty,
                  cmd_penalty, start_cond_coef, cmd_suit_coef)
-render = False
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-# In[3]:
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 Transition = namedtuple('Transition',
@@ -80,11 +58,8 @@ class ReplayMemory(object):
         return len(self.memory)
 
 
-# In[4]:
-
-
-class FClayer(nn.Module):
-    def __init__(self, innodes: int, nodes: int):
+class FClayer(nn.Module):  # define fully connected layer with Leaky ReLU activation function
+    def __init__(self, innodes, nodes):
         super(FClayer, self).__init__()
         self.fc = nn.Linear(innodes, nodes)
         self.act = nn.LeakyReLU(0.2, inplace=True)
@@ -95,9 +70,9 @@ class FClayer(nn.Module):
         return out
 
 
+# define custom model named wave net, which was coined after seeing the nodes sway
 class WaveNET(nn.Module):
-    def __init__(self, block: Type[Union[FClayer]], planes: List[int], nodes: List[int], num_classes: int = 3
-                 ) -> None:
+    def __init__(self, block, planes, nodes, num_classes=3):
         super(WaveNET, self).__init__()
         self.innodes = 5
 
@@ -112,7 +87,7 @@ class WaveNET(nn.Module):
                 nn.init.kaiming_normal_(
                     m.weight, mode='fan_out', nonlinearity='leaky_relu')
 
-    def _make_layer(self, block: Type[Union[FClayer]], planes: int, nodes: int) -> nn.Sequential:
+    def _make_layer(self, block, planes, nodes):
 
         layers = []
         layers.append(block(self.innodes, nodes))
@@ -122,7 +97,7 @@ class WaveNET(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _forward_impl(self, x: Tensor) -> Tensor:
+    def _forward_impl(self, x):
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -131,11 +106,8 @@ class WaveNET(nn.Module):
 
         return x
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x):
         return self._forward_impl(x)
-
-
-# In[5]:
 
 
 BATCH_SIZE = 128
@@ -147,17 +119,11 @@ TARGET_UPDATE = 10
 random_seed = 0
 
 
-# In[6]:
-
-
 policy_net = torch.load("./Custom_model_fin").to(device)
 target_net = torch.load("./Custom_model_fin").to(device)
 target_net.eval()
 mean = np.load('mean_test.npy')
 std = np.load('std_test.npy')
-
-
-# In[7]:
 
 
 def init_weights(m):
@@ -166,20 +132,11 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
-# In[8]:
-
-
 policy_net.apply(init_weights)
 target_net.apply(init_weights)
 
 
-# In[9]:
-
-
 n_actions = env.action_space.n
-
-
-# In[10]:
 
 
 optimizer = optim.Adam(policy_net.parameters(), lr=lr, betas=betas)
@@ -187,13 +144,8 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size)
 memory = ReplayMemory(20000)
 
 
-# In[11]:
-
-
 steps_done = 0
 
-
-# In[12]:
 
 
 def select_action(state):
@@ -204,16 +156,10 @@ def select_action(state):
     steps_done += 1
     if sample > eps_threshold:
         with torch.no_grad():
-            # t.max (1)은 각 행의 가장 큰 열 값을 반환합니다.
-            # 최대 결과의 두번째 열은 최대 요소의 주소값이므로,
-            # 기대 보상이 더 큰 행동을 선택할 수 있습니다.
             return policy_net(state).max(1)[1].view(1, 1)
     else:
         #         return policy_net(state).max(1)[1].view(1, 1)
         return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
-
-
-# In[13]:
 
 
 def optimize_model():
@@ -251,14 +197,8 @@ def optimize_model():
     optimizer.step()
 
 
-# In[14]:
-
-
 torch.manual_seed(random_seed)
 env.seed(random_seed)
-
-
-# In[15]:
 
 
 num_episodes = 50000
@@ -334,22 +274,13 @@ print('Complete')
 env.close()
 
 
-# In[16]:
-
-
 def step_average(data, n):
     res = [np.mean(data[i*n:(i+1)*n]) for i in range(int((len(data)/n)))]
     return np.array(res)
 
 
-# In[17]:
-
-
 for i in range(len(reward_list)):
     reward_list[i] = reward_list[i].cpu().detach().numpy()
-
-
-# In[18]:
 
 
 average_number = 50
@@ -360,82 +291,4 @@ plt.ylabel("Total rewards")
 plt.plot(filtered_data)
 
 
-# In[21]:
-
-
 np.savetxt("DQN_non_model_reward.csv", np.array(filtered_data), delimiter=",")
-
-
-# In[19]:
-
-
-# plots
-Deg2Rad = np.pi/180
-Rad2Deg = 1/Deg2Rad
-
-plt_res = total_res[-3]
-
-
-plt.figure(figsize=(15, 9), dpi=100)
-
-plt.subplot(511)
-plt.plot(plt_res[:, 0], label=r'$\dot{h}_{cmd}$')
-plt.ylabel(r'$\dot{h}_{cmd}$ ($m/s$)'), plt.grid()
-
-plt.subplot(512)
-plt.plot(plt_res[:, 10], label=r'$\{h}$')
-plt.ylabel(r'$h$ (m)'), plt.grid()
-
-plt.subplot(513)
-plt.plot(plt_res[:, 1], label=r'$\{r}$')
-plt.ylabel(r'$r$ (m)'), plt.grid()
-
-plt.subplot(514)
-plt.plot(plt_res[:, 2]*Rad2Deg, label='elevation')
-plt.ylabel('elevation (deg)'), plt.grid()
-
-plt.subplot(515)
-plt.plot(plt_res[:, 3]*Rad2Deg, label='azimuth')
-plt.ylabel('azimuth (deg)'), plt.grid()
-
-plt.legend()
-plt.show()
-
-
-# In[20]:
-
-
-# trajectory plots
-
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.gca(projection='3d')
-plt.plot(plt_res[:, 5], plt_res[:, 4], -
-         plt_res[:, 6], label='player', linewidth=3)
-plt.plot(plt_res[:, 8], plt_res[:, 7], -
-         plt_res[:, 9], label='target', linewidth=3)
-plt.xlabel('East')
-plt.ylabel('North')
-plt.xlim(-2000, 2000)
-plt.ylim(0, 4000)
-plt.legend()
-plt.show()
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.plot(plt_res[:, 5], plt_res[:, 4], label='player', linewidth=3)
-plt.plot(plt_res[:, 8], plt_res[:, 7], label='target', linewidth=3)
-plt.xlabel('East')
-plt.ylabel('North')
-plt.grid(), plt.legend(), plt.axis('equal')
-plt.show()
-
-plt.figure(figsize=(12, 9), dpi=100)
-plt.plot(plt_res[:, 4], -plt_res[:, 6], label='player', linewidth=3)
-plt.plot(plt_res[:, 7], -plt_res[:, 9], label='target', linewidth=3)
-plt.xlabel('North')
-plt.ylabel('Up')
-plt.grid(), plt.legend(), plt.axis('equal')
-plt.show()
-
-
-# In[ ]:

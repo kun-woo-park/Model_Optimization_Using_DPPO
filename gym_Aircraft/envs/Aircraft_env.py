@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-import random
 import warnings
 from gym import error, spaces, utils
 from gym.utils import seeding
@@ -12,7 +11,7 @@ class AircraftEnv(gym.Env):
         super(AircraftEnv).__init__()
         # setting seed
         if not reset:
-            self.seed()
+            self.np_random = self.seed()
         
         # initialize reward coefficients
         
@@ -29,7 +28,6 @@ class AircraftEnv(gym.Env):
         self.g = 9.8                            # Gravity acceleration
         self.K_alt = .8*2                       # hdot loop gain
         self.AoA0 = -1.71*self.Deg2Rad          # zero lift angle of attac
-        # 1m/s^2 ACC corresponds to 0.308333deg AOA
         self.Acc2AoA = 0.308333*self.Deg2Rad
         self.zeta_ap = 0.7                      # pitch acceleration loop damping
         self.omega_ap = 4                       # pitch acceleration loop bandwidth
@@ -91,7 +89,7 @@ class AircraftEnv(gym.Env):
         self.r = np.linalg.norm(self.Pr_Body)  # range
         self.vc = -np.dot(self.Pr_NED, self.Vr_NED) / \
             self.r  # closing velocity
-        # target vertival look angle (down +)
+        # target vertical look angle (down +)
         self.elev = np.arctan2(self.Pr_Body[2], self.Pr_Body[0])
         # target horizontal look angle (right +)
         self.azim = np.arctan2(
@@ -116,11 +114,12 @@ class AircraftEnv(gym.Env):
         self.action_space = spaces.Discrete(3)
         self.observation_space = spaces.Box(
             low=-self.high, high=self.high, dtype=np.float32)  # r, vc, los, daz, dlos`
-        
 
+    # noinspection PyMethodMayBeStatic
+    # function for seeding
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+        np_random, seed = seeding.np_random(seed)
+        return np_random
 
     def model(self, z, t, hdot_cmd):                # computes state derivatives
         Vm = 200

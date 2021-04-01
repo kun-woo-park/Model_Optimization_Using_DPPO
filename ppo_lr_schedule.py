@@ -4,11 +4,11 @@ from torch import Tensor
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
 from IPython.display import clear_output
-from typing import Type, Any, Callable, Union, List, Optional
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+# plot function for jupyter notebook
 def plot(epi_idx, rewards, total_res, test_rewards, test_total_res):
     plt_res = total_res[-1]
     test_plt_res = test_total_res[-1]
@@ -40,6 +40,7 @@ def plot(epi_idx, rewards, total_res, test_rewards, test_total_res):
     plt.show()
 
 
+# Replay buffer
 class Memory:
     def __init__(self):
         self.actions = []
@@ -56,8 +57,8 @@ class Memory:
         del self.is_terminals[:]
 
 
-class FClayer(nn.Module):
-    def __init__(self, innodes: int, nodes: int):
+class FClayer(nn.Module):  # define fully connected layer with Leaky ReLU activation function
+    def __init__(self, innodes, nodes):
         super(FClayer, self).__init__()
         self.fc = nn.Linear(innodes, nodes)
         self.act = nn.LeakyReLU(0.2, inplace=True)
@@ -68,9 +69,9 @@ class FClayer(nn.Module):
         return out
 
 
+# define custom model named wave net, which was coined after seeing the nodes sway
 class WaveNET(nn.Module):
-    def __init__(self, block: Type[Union[FClayer]], planes: List[int], nodes: List[int], num_classes: int = 3
-                 ) -> None:
+    def __init__(self, block, planes, nodes, num_classes=3):
         super(WaveNET, self).__init__()
         self.innodes = 5
 
@@ -85,7 +86,7 @@ class WaveNET(nn.Module):
                 nn.init.kaiming_normal_(
                     m.weight, mode='fan_out', nonlinearity='leaky_relu')
 
-    def _make_layer(self, block: Type[Union[FClayer]], planes: int, nodes: int) -> nn.Sequential:
+    def _make_layer(self, block, planes, nodes):
 
         layers = []
         layers.append(block(self.innodes, nodes))
@@ -95,7 +96,7 @@ class WaveNET(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _forward_impl(self, x: Tensor) -> Tensor:
+    def _forward_impl(self, x):
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -104,10 +105,11 @@ class WaveNET(nn.Module):
 
         return x
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x):
         return self._forward_impl(x)
 
 
+# Actor-Critic network
 class ActorCritic(nn.Module):
     def __init__(self, actor_model, critic_model):
         super(ActorCritic, self).__init__()
@@ -117,9 +119,6 @@ class ActorCritic(nn.Module):
 
         # critic
         self.value_layer = critic_model
-
-        # sampling flag
-        self.sampling_start = False
 
     def forward(self):
         raise NotImplementedError
@@ -149,6 +148,7 @@ class ActorCritic(nn.Module):
         return action_logprobs, torch.squeeze(state_value), dist_entropy
 
 
+# Deterministic PPO algorithm
 class PPO:
     def __init__(self, actor_model, critic_model, lr, betas, gamma, K_epochs, eps_clip, step_size):
         self.lr = lr
