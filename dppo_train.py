@@ -44,8 +44,8 @@ if __name__ == "__main__":
         actor_model.apply(init_weights)
         critic_model.apply(init_weights)
     # load mean and std of trained data
-    mean = np.load('mean_test.npy')
-    std = np.load('std_test.npy')
+    mean = np.load('mean.npy')
+    std = np.load('std.npy')
     # set final nodes for each model(final node of critic to one and add softmax to actor)
     num_final_nodes = critic_model.fin_fc.in_features
     critic_model.fin_fc = nn.Linear(num_final_nodes, 1)
