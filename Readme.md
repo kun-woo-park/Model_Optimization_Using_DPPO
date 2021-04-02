@@ -32,8 +32,8 @@ Actor Critic 알고리즘은 Actor(policy) network와 Critic(value) network의 �
 
 ## Results
 아래 두 결과들은 기존의 강화학습 알고리즘들 몇가지와 본 연구에 사용된 알고리즘의 reward 수렴 결과이다. 사용된 알고리즘들은 기존의 PPO방식(PPO_nm)과 DQN방식(DQN_nm), 초기 weight를 supervised model의 weight로 초기화한 PPO(PPO_wm)와 DQN(DQN_wm), 그리고 본 연구에서 제안된 deterministic policy와 value net fine tuning을 적용한 PPO(PPO_vt)방식이다. 각 알고리즘들은 동일한 seed의 환경에서 진행되었으며, 각 그래프의 Initmodel 곡선은 초기의 supervised model에 대한 reward의 값이다. 결과를 보면, 초기 weight가 supervised model로 초기화된 PPO방식들의 reward가 월등히 높게 수렴함을 알 수 있다. 이 PPO방식들 중 본 연구에서 활용된 학습 방식의 reward가 기존의 PPO알고리즘만을 사용한 방식보다 11% 가량 더 높은 reward에 수렴하였다.
-### Plot res-1
+### Reward plot for each RL algorithm
 <img src="./image/res1.png" width="60%">
 
-### Plot res-2
+### Reward plot for each RL algorithm(DPPO untuned value net, DPPO tuned value net, Initial model)
 <img src="./image/res2.png" width="60%">
