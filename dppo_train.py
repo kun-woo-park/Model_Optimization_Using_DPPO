@@ -36,9 +36,9 @@ if __name__ == "__main__":
     ##############################################
 
     # load learned model
-    actor_model = torch.load("./Custom_model_fin")
-    critic_model = torch.load("./Custom_model_fin")
-    test_model = torch.load("./Custom_model_fin")
+    actor_model = torch.load("./Custom_model_fin.pth")
+    critic_model = torch.load("./Custom_model_fin.pth")
+    test_model = torch.load("./Custom_model_fin.pth")
     # initialize weights if it should
     if weights_initialize:
         actor_model.apply(init_weights)
