@@ -26,9 +26,9 @@ class WaveNET(nn.Module):
         super(WaveNET, self).__init__()
         self.innodes = 5
 
-        self.layer1 = self._make_layer(block, planes[0], nodes[0])
-        self.layer2 = self._make_layer(block, planes[1], nodes[1])
-        self.layer3 = self._make_layer(block, planes[2], nodes[2])
+        self.layer1 = self.make_layer(block, planes[0], nodes[0])
+        self.layer2 = self.make_layer(block, planes[1], nodes[1])
+        self.layer3 = self.make_layer(block, planes[2], nodes[2])
 
         self.fin_fc = nn.Linear(self.innodes, num_classes)
 
@@ -37,7 +37,7 @@ class WaveNET(nn.Module):
                 nn.init.kaiming_normal_(
                     m.weight, mode='fan_out', nonlinearity='leaky_relu')
 
-    def _make_layer(self, block, planes, nodes):
+    def make_layer(self, block, planes, nodes):
 
         layers = []
         layers.append(block(self.innodes, nodes))
@@ -47,7 +47,7 @@ class WaveNET(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _forward_impl(self, x):
+    def forward_impl(self, x):
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -57,4 +57,4 @@ class WaveNET(nn.Module):
         return x
 
     def forward(self, x):
-        return self._forward_impl(x)
+        return self.forward_impl(x)
