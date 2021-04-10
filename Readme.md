@@ -1,5 +1,5 @@
 # Actor Critic PPO algorithm (Collision Avoidance Final Results)
-학습된 supervised learning model을 기반으로 PPO알고리즘을 통해 fine tuning을 진행하였다. [ppo_prev_try](ppo_prev_try) 폴더는 앞서 시도한 내용들을 모아둔 폴더이다. 최종 결과들은 [ppo_fin](ppo_fin)에 정리되어 있으며, [제어학회논문_박건우_최종.pdf](제어학회_박건우_최종.pdf)에서 작성된 논문 내용을 확인할 수 있다. 정리되지 않은 실험내용은 [Aircraft_avoidance_RL](https://github.com/aisl-khu/collision_avoidance/tree/master/Aircraft_avoidance_RL)에서 확인할 수 있다.
+학습된 supervised learning model을 기반으로 PPO알고리즘을 통해 fine tuning을 진행하였다. [ppo_prev_try](ppo_prev_try) 폴더는 앞서 시도한 내용들을 모아둔 폴더이다. 최종 결과들은 [ppo_fin](ppo_fin)에 정리되어 있으며, [제어학회논문_박건우_최종.pdf](제어학회_박건우_최종.pdf)에서 작성된 논문 내용을 확인할 수 있다. 이전 지도학습을 통한 초기 네트워크 구축에 대한 내용은 [Imitation_learning](https://github.com/kun-woo-park/Imitation_learning)에서, 정리되지 않은 실험내용은 [Aircraft_avoidance_RL](https://github.com/aisl-khu/collision_avoidance/tree/master/Aircraft_avoidance_RL)에서 확인할 수 있다.
 
 ## Implementation of project
 ```bash
