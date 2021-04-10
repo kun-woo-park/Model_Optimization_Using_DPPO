@@ -43,9 +43,9 @@ Actor Critic 알고리즘은 Actor(policy) network와 Critic(value) network의 �
 <img src="./image/res2.png" width="60%">
 
 ### Minimum approach distance for each avoidance algorithm (Avoiding up)
-<img src="./image/uc_res.jpg" width="60%">
+<img src="./image/uc_res.jpg" width="100%">
 
 ### Minimum approach distance for each avoidance algorithm (Avoiding down)
-<img src="./image/dc_res.jpg" width="60%">
+<img src="./image/dc_res.jpg" width="100%">
 
 최종적으로 각 회피알고리즘 별 상승회피 시나리오와 하강회피 시나리오에서 최소 접근거리의 분포를 비교한 결과, 초기의 회피알고리즘과 지도학습으로 학습된 회피 네트워크에 비해 17%가량 더 높은 회피 효율을 보였다. 여기서 회피효율은 지정된 최소 회피거리(여기선 100m로 지정)에 얼마나 가깝게 회피했는지를 평균값과 분산을 이용해 비교하였다.
