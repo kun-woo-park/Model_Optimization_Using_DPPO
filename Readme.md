@@ -1,4 +1,4 @@
-# Actor Critic PPO algorithm (Collision Avoidance Final Results)
+# Actor Critic DPPO algorithm (Collision Avoidance Final Results)
 본 Repo는 [Imitation_learning](https://github.com/kun-woo-park/Imitation_learning)에서 이어지는 내용이다. 학습된 supervised learning model을 기반으로 PPO알고리즘을 통해 fine tuning을 진행하였다. [ppo_prev_try](ppo_prev_try) 폴더는 앞서 시도한 내용들을 모아둔 폴더이다. 최종 결과들은 [ppo_fin](ppo_fin)에 정리되어 있으며, [제어학회논문_박건우_최종.pdf](제어학회_박건우_최종.pdf)에서 작성된 논문 내용을 확인할 수 있다. 정리되지 않은 실험내용은 [Aircraft_avoidance_RL](https://github.com/aisl-khu/collision_avoidance/tree/master/Aircraft_avoidance_RL)에서 확인할 수 있다.
 
 강화학습의 네트워크 구조로는 Actor Critic 방식을, 알고리즘으로는 PPO를 채택하였다. 그 이유는 항공기 제어환경의 state space가 넓어 high biased할 가능성이 있는 value based와 high variance할 가능성이 있는 policy based만을 사용할 경우 수렴이 어려울 것이라 판단했기 때문이다. 또한 loss의 형태를 PPO의 surrogate loss를 사용함으로써 수렴의
